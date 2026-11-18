@@ -1,0 +1,97 @@
+/* js/features/initiative.js — ตัวนับลำดับเทิร์น (Initiative) แถบแนวนอนใต้แถบเครื่องมือ */
+(function () {
+    'use strict';
+    const KEY = 'mapdd_init_v1';
+    let S = { round: 1, cur: null, order: [] };   // order: [{id, init}] เรียงมาก→น้อย
+    try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && Array.isArray(r.order)) S = r; } catch (e) { }
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } };
+    const tok = id => state.tokens.find(t => t.id === id);
+    const d20 = () => 1 + Math.floor(Math.random() * 20);
+    const dexBonus = t => (t.hr && t.hr.checks && Number(t.hr.checks.DEX)) || 0;
+    const sortOrder = () => S.order.sort((a, b) => b.init - a.init);
+    const prune = () => {
+        S.order = S.order.filter(o => tok(o.id));
+        if (!S.order.some(o => o.id === S.cur)) S.cur = S.order[0] ? S.order[0].id : null;
+    };
+
+    const strip = document.createElement('div');
+    strip.id = 'initStrip';
+    strip.className = 'hidden absolute left-1/2 -translate-x-1/2 z-10 bg-vtt-panel/95 backdrop-blur border border-vtt-border rounded-2xl shadow-xl px-2 py-1.5 flex items-center gap-1.5 max-w-[96vw]';
+    strip.style.top = '4.6rem';
+    container.appendChild(strip);
+
+    function shiftBars() {   // แถบเงา/วงสกิลเดิมอยู่บนสุด — ขยับลงให้พ้นแถบเทิร์น
+        const y = strip.classList.contains('hidden') ? '5rem' : '8.6rem';
+        ['fogFloatingToolbar', 'aoeFloatingToolbar'].forEach(id => { const el = document.getElementById(id); if (el) el.style.top = y; });
+    }
+
+    function render() {
+        prune();
+        const chips = S.order.map(o => {
+            const t = tok(o.id), on = o.id === S.cur;
+            return `<div data-pick="${o.id}" class="shrink-0 flex items-center gap-1 rounded-xl border px-1.5 py-1 cursor-pointer ${on ? 'border-amber-400 bg-amber-500/20' : 'border-vtt-border bg-vtt-bg'}">
+                <span class="w-2.5 h-2.5 rounded-full" style="background:${t.color || '#64748b'}"></span>
+                <span class="text-[11px] font-semibold text-white max-w-[5.5rem] truncate">${escapeHtml(t.name)}</span>
+                <input data-init="${o.id}" type="number" value="${o.init}" class="w-9 bg-transparent text-center text-[11px] font-bold text-amber-400 focus:outline-none" title="ค่าริเริ่ม (แก้ได้)">
+                <button data-rm="${o.id}" class="text-slate-500 hover:text-rose-400 text-[11px]" title="เอาออกจากลำดับ">✕</button>
+            </div>`;
+        }).join('');
+        strip.innerHTML = `
+            <span class="shrink-0 text-[11px] font-bold text-amber-400">รอบ ${S.round}</span>
+            <div class="flex items-center gap-1 overflow-x-auto max-w-[60vw]">${chips || '<span class="text-[11px] text-slate-500 px-1">ยังไม่มีลำดับ — กด 🎲 เพื่อทอยริเริ่มทุกหมุด</span>'}</div>
+            <button data-act="prev" class="shrink-0 px-1.5 py-1 rounded-lg hover:bg-vtt-card text-slate-200" title="เทิร์นก่อนหน้า">⏮</button>
+            <button data-act="next" class="shrink-0 px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold" title="เทิร์นถัดไป">⏭ ถัดไป</button>
+            <button data-act="roll" class="shrink-0 px-1.5 py-1 rounded-lg hover:bg-vtt-card text-slate-200" title="ทอยริเริ่มทุกหมุด (เริ่มรอบ 1 ใหม่)">🎲</button>
+            <button data-act="add" class="shrink-0 px-1.5 py-1 rounded-lg hover:bg-vtt-card text-slate-200" title="เพิ่มหมุดที่เลือกเข้าลำดับ">＋</button>
+            <button data-act="end" class="shrink-0 px-1.5 py-1 rounded-lg hover:bg-vtt-card text-rose-300" title="จบการต่อสู้ (ล้างลำดับ)">🧹</button>`;
+    }
+
+    function go(dir) {
+        if (!S.order.length) return;
+        const i = S.order.findIndex(o => o.id === S.cur);
+        let n = i + dir;
+        if (n >= S.order.length) { n = 0; S.round++; }
+        if (n < 0) { n = S.order.length - 1; S.round = Math.max(1, S.round - 1); }
+        S.cur = S.order[n].id;
+        state.selectedTokenId = S.cur; renderAll();
+        const t = tok(S.cur); if (t) showToast(`เทิร์นของ ${t.name} (รอบ ${S.round})`);
+        save(); render();
+    }
+    const addToken = t => {
+        const o = S.order.find(x => x.id === t.id);
+        const init = d20() + dexBonus(t);
+        if (o) o.init = init; else S.order.push({ id: t.id, init });
+    };
+
+    strip.addEventListener('click', e => {
+        const a = e.target.closest('[data-act]'), rm = e.target.closest('[data-rm]'), pk = e.target.closest('[data-pick]');
+        if (a) {
+            const act = a.dataset.act;
+            if (act === 'next') return go(1);
+            if (act === 'prev') return go(-1);
+            if (act === 'roll') { S.order = []; state.tokens.forEach(addToken); sortOrder(); S.round = 1; S.cur = S.order[0] ? S.order[0].id : null; showToast('ทอยริเริ่มทุกหมุดแล้ว (d20 + โบนัส DEX ถ้ามี)'); }
+            if (act === 'add') { const t = getSelectedToken(); if (!t) return showToast('เลือกหมุดบนแมพก่อน'); addToken(t); sortOrder(); if (!S.cur) S.cur = t.id; }
+            if (act === 'end') { S = { round: 1, cur: null, order: [] }; }
+            save(); render();
+        } else if (rm) {
+            S.order = S.order.filter(o => o.id !== rm.dataset.rm); save(); render();
+        } else if (pk && !e.target.closest('input')) {
+            state.selectedTokenId = pk.dataset.pick; renderAll();
+        }
+    });
+    strip.addEventListener('change', e => {
+        const el = e.target.closest('[data-init]');
+        if (!el) return;
+        const o = S.order.find(x => x.id === el.dataset.init);
+        if (o) { o.init = Number(el.value) || 0; sortOrder(); save(); render(); }
+    });
+
+    const btn = document.createElement('button');
+    btn.title = 'ลำดับเทิร์น (Initiative)';
+    btn.className = 'min-w-[3.2rem] px-1.5 py-1 rounded-xl hover:bg-vtt-card text-slate-200 flex flex-col items-center leading-tight text-center';
+    btn.innerHTML = '<span class="text-base">⚔️</span><span class="text-[9px] text-slate-400">เทิร์น</span>';
+    btn.onclick = () => { strip.classList.toggle('hidden'); shiftBars(); if (!strip.classList.contains('hidden')) render(); };
+    const tb = document.getElementById('mapddToolbar');
+    if (tb) tb.appendChild(btn);
+    render();
+})();
