@@ -2,6 +2,12 @@
 
 แผนที่ต่อสู้ D&D (เว็บ static) เปิดผ่าน GitHub Pages ได้เลย ไม่ต้องมีขั้นตอนบิลด์
 
+## 🔗 เปิดใช้งาน
+- **เปิดเว็บ:** https://6714120001-glitch.github.io/D-D-_app/
+- **Repo (โค้ด):** https://github.com/6714120001-glitch/D-D-_app
+
+> ถ้าเปิดแล้วขึ้น 404: ไปที่ Settings → Pages ของ repo แล้วเลือก Source = Deploy from a branch, branch `main`, โฟลเดอร์ `/ (root)` รอ 1–2 นาที
+
 ## โครงสร้างไฟล์ (อัปทั้งโฟลเดอร์ตามนี้)
 ```
 index.html                  หน้าเพจหลัก (HTML อย่างเดียว)
