@@ -307,7 +307,9 @@
 
     function buildToolbar() {
         const tb = document.createElement('div');
-        tb.className = 'absolute top-3 right-3 z-10 flex flex-col gap-1.5 bg-vtt-panel/90 backdrop-blur border border-vtt-border rounded-2xl p-1.5 shadow-xl';
+        tb.className = 'absolute top-2 left-1/2 -translate-x-1/2 z-10 flex flex-row gap-0.5 bg-vtt-panel/90 backdrop-blur border border-vtt-border rounded-2xl p-1 shadow-xl max-w-[96vw]';
+        // แถบลอยของโหมดเงา/วงสกิลเดิมอยู่บนสุดตรงกลาง — ขยับลงมาไม่ให้ทับแถบนี้
+        ['fogFloatingToolbar', 'aoeFloatingToolbar'].forEach(id => { const el = document.getElementById(id); if (el) el.style.top = '5rem'; });
         const items = [
             ['⤢', 'พอดีจอ', 'จัดแผนที่ให้พอดีหน้าจอ', () => { fitMapToScreen(); }],
             ['▦', 'กริดพอดีภาพ', 'ปรับขนาดช่องกริดให้ลงตัวกับความกว้างภาพ', fitGridToImage],
@@ -318,7 +320,7 @@
         items.forEach(([ic, label, tip, fn]) => {
             const b = document.createElement('button');
             b.title = tip;
-            b.className = 'w-11 py-1 rounded-xl hover:bg-vtt-card text-slate-200 flex flex-col items-center leading-tight';
+            b.className = 'min-w-[3.2rem] px-1.5 py-1 rounded-xl hover:bg-vtt-card text-slate-200 flex flex-col items-center leading-tight text-center';
             b.innerHTML = `<span class="text-base">${ic}</span><span class="text-[9px] text-slate-400">${label}</span>`;
             b.onclick = fn;
             tb.appendChild(b);
