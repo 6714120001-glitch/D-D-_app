@@ -6,6 +6,7 @@ function saveSceneJSON() {
         grid: state.grid,
         fog: state.fog || { cells: {}, dmDarkOpacity: 1.0 },
         aoeTemplates: state.aoeTemplates || [],
+        spawn: state.spawn || {},
         tokens: state.tokens,
         mapImageSrc: state.mapImageSrc
     };
@@ -29,6 +30,7 @@ document.getElementById('sceneLoadInput').addEventListener('change', (e) => {
             if (data.grid) state.grid = { ...state.grid, ...data.grid };
             state.fog = data.fog ? { cells: data.fog.cells || {}, dmDarkOpacity: 1.0 } : { cells: {}, dmDarkOpacity: 1.0 };
             state.aoeTemplates = Array.isArray(data.aoeTemplates) ? data.aoeTemplates : [];
+            state.spawn = (data.spawn && typeof data.spawn === 'object') ? data.spawn : {};
             if (Array.isArray(data.tokens)) {
                 state.tokens = data.tokens.map(ensureTokenRpgData);
                 state.tokens.forEach(t => {

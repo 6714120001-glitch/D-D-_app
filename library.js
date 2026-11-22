@@ -90,6 +90,7 @@
                 const center = screenToWorld(r.width / 2, r.height / 2);
                 list.forEach((ch, i) => {
                     const t = companionToToken(ch, i, center);
+                    if (window.mapddPlaceAtSpawn) window.mapddPlaceAtSpawn(t);
                     state.tokens.push(t);
                     state.selectedTokenId = t.id;
                     libAdd(t, true);
@@ -129,6 +130,7 @@
         const ctr = screenToWorld(r.width / 2, r.height / 2);
         const p = snapPositionToGrid(ctr.x + (state.tokens.length % 5) * (state.grid.size || 64), ctr.y, t.size || 1);
         t.x = p.x; t.y = p.y;
+        if (window.mapddPlaceAtSpawn) window.mapddPlaceAtSpawn(t);
         if (t.avatar) { const im = new Image(); im.src = t.avatar; avatarCache[t.avatar] = im; }
         state.tokens.push(t); state.selectedTokenId = t.id;
         renderAll(); saveToLocalStorage();
@@ -340,7 +342,7 @@
         download(`dnd_battlemap_all_${today()}.json`, {
             app: 'dnd-battlemap', version: '2.0', savedAt: new Date().toISOString(),
             grid: state.grid, fog: state.fog || { cells: {}, dmDarkOpacity: 1 },
-            aoeTemplates: state.aoeTemplates || [], tokens: state.tokens,
+            aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, tokens: state.tokens,
             mapImageSrc: state.mapImageSrc, library: loadLib()
         });
         showToast('บันทึกฉาก + หมุด + คลังตัวละคร ลงไฟล์เดียวแล้ว (โหลดด้วยปุ่ม "โหลดฉาก")');
@@ -417,7 +419,7 @@
         await scenePut(JSON.parse(JSON.stringify({
             id: old ? old.id : 'scn-' + Date.now() + '-' + rid(), name, savedAt: Date.now(), thumb: makeThumb(),
             mapImageSrc: state.mapImageSrc, isBlankMap: state.isBlankMap, mapWidth: state.mapWidth, mapHeight: state.mapHeight,
-            grid: state.grid, fog: state.fog, aoeTemplates: state.aoeTemplates || [], tokens: state.tokens
+            grid: state.grid, fog: state.fog, aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, tokens: state.tokens
         })));
         inp.value = '';
         showToast(`เก็บฉาก "${name}" แล้ว (แมพ + หมุด + เงา)`);
@@ -431,6 +433,7 @@
         state.grid = { ...state.grid, ...(d.grid || {}) };
         state.fog = { cells: (d.fog && d.fog.cells) || {}, dmDarkOpacity: 1.0 };
         state.aoeTemplates = d.aoeTemplates || [];
+        state.spawn = d.spawn || {};
         if (!keep) {
             state.tokens = (d.tokens || []).map(ensureTokenRpgData);
             state.tokens.forEach(t => { if (t.avatar) { const im = new Image(); im.src = t.avatar; avatarCache[t.avatar] = im; } });
