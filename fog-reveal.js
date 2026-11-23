@@ -5,7 +5,7 @@
 (function () {
     'use strict';
     const KEY = 'mapdd_fogreveal_v1';
-    let on = true, tokensRef = null, lastPos = {}, busy = false;
+    let on = true, busy = false;
     try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && r.on === false) on = false; } catch (e) { }
     const saveOn = () => { try { localStorage.setItem(KEY, JSON.stringify({ on })); } catch (e) { } };
 
@@ -25,21 +25,27 @@
         }
         return n > 0;
     }
-    function check() {   // หมุดที่ตำแหน่งเปลี่ยนตั้งแต่การบันทึกครั้งก่อน = เพิ่งถูกเลื่อน
-        if (tokensRef !== state.tokens) {   // โหลดฉาก/กระดานใหม่: จำตำแหน่งใหม่ ไม่เปิดเงา
-            tokensRef = state.tokens; lastPos = {};
-            state.tokens.forEach(t => { lastPos[t.id] = t.x + ',' + t.y; });
-            return false;
-        }
+    // จำตำแหน่งหมุดทุกตัว "ตอนกดเมาส์/นิ้วลงบนแมพ" (ก่อนลากหมุด) แล้วเทียบตอนบันทึกหลังปล่อย
+    // → ใช้ได้ตั้งแต่การเลื่อนครั้งแรกหลังเปิดหน้า (เดิมพึ่งการบันทึกครั้งก่อน ทำให้ครั้งแรกไม่เปิดเงา)
+    let pre = null, preRef = null;
+    function snap() {
+        pre = {}; preRef = state.tokens;
+        state.tokens.forEach(t => { pre[t.id] = t.x + ',' + t.y; });
+    }
+    function onDown(e) { if (e.target === canvas) snap(); }
+    container.addEventListener('mousedown', onDown, true);
+    container.addEventListener('touchstart', onDown, { capture: true, passive: true });
+    function check() {
+        if (!pre || preRef !== state.tokens) { snap(); return false; }   // ไม่มีภาพถ่ายก่อนลาก / โหลดฉากใหม่ → ไม่เปิดเงา
         let changed = false;
         state.tokens.forEach(t => {
-            const k = t.x + ',' + t.y;
-            if (lastPos[t.id] === undefined) { lastPos[t.id] = k; return; }   // หมุดใหม่: ยังไม่เปิด
-            if (lastPos[t.id] !== k) { lastPos[t.id] = k; if (reveal(t)) changed = true; }
+            const before = pre[t.id];
+            if (before !== undefined && before !== t.x + ',' + t.y && reveal(t)) changed = true;
         });
+        snap();
         return changed;
     }
-    window.mapddSyncRevealPos = t => { lastPos[t.id] = t.x + ',' + t.y; };   // ให้จุดเกิดไม่ถูกนับเป็นการเลื่อน
+    window.mapddSyncRevealPos = t => { if (pre) pre[t.id] = t.x + ',' + t.y; };   // ให้จุดเกิดไม่ถูกนับเป็นการเลื่อน
 
     const origSave = window.saveToLocalStorage;
     window.saveToLocalStorage = function () {
