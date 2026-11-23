@@ -25,18 +25,21 @@
         }
         return n > 0;
     }
-    // จำตำแหน่งหมุดทุกตัว "ตอนกดเมาส์/นิ้วลงบนแมพ" (ก่อนลากหมุด) แล้วเทียบตอนบันทึกหลังปล่อย
-    // → ใช้ได้ตั้งแต่การเลื่อนครั้งแรกหลังเปิดหน้า (เดิมพึ่งการบันทึกครั้งก่อน ทำให้ครั้งแรกไม่เปิดเงา)
-    let pre = null, preRef = null;
+    // จำตำแหน่งหมุดทุกตัว (ตามรหัสหมุด) "ตอนกดเมาส์/นิ้วลงบนแมพ" ก่อนลากหมุด แล้วเทียบตอนบันทึกหลังปล่อย
+    // หมายเหตุ: แอปสลับลำดับ state.tokens ใหม่ทุกครั้งที่กดหมุด (ดึงไปไว้บนสุด) จึงเทียบด้วยรหัสหมุด ไม่ใช่ตัวอาร์เรย์
+    let pre = null;
     function snap() {
-        pre = {}; preRef = state.tokens;
+        pre = {};
         state.tokens.forEach(t => { pre[t.id] = t.x + ',' + t.y; });
     }
-    function onDown() { snap(); }   // ทุกการกดในพื้นที่แมพ (จดตำแหน่งเฉยๆ ไม่มีผลข้างเคียง)
+    function onDown() { snap(); }   // กดในพื้นที่แมพ: จดตำแหน่งเฉยๆ ไม่มีผลข้างเคียง
     container.addEventListener('mousedown', onDown, true);
     container.addEventListener('touchstart', onDown, { capture: true, passive: true });
+    function onOutside(e) { if (!container.contains(e.target)) pre = null; }   // กดปุ่มเมนู/โหลดฉากนอกแมพ → ล้างภาพถ่าย กันนับการโหลดฉากเป็นการเลื่อน
+    document.addEventListener('mousedown', onOutside, true);
+    document.addEventListener('touchstart', onOutside, { capture: true, passive: true });
     function check() {
-        if (!pre || preRef !== state.tokens) { snap(); return false; }   // ไม่มีภาพถ่ายก่อนลาก / โหลดฉากใหม่ → ไม่เปิดเงา
+        if (!pre) { snap(); return false; }   // ไม่มีภาพถ่ายก่อนลาก → ไม่เปิดเงา
         let changed = false;
         state.tokens.forEach(t => {
             const before = pre[t.id];
