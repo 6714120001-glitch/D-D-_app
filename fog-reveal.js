@@ -5,7 +5,7 @@
 (function () {
     'use strict';
     const KEY = 'mapdd_fogreveal_v1';
-    let on = true, busy = false;
+    let on = true;
     try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && r.on === false) on = false; } catch (e) { }
     const saveOn = () => { try { localStorage.setItem(KEY, JSON.stringify({ on })); } catch (e) { } };
 
@@ -50,14 +50,15 @@
     }
     window.mapddSyncRevealPos = t => { if (pre) pre[t.id] = t.x + ',' + t.y; };   // ให้จุดเกิดไม่ถูกนับเป็นการเลื่อน
 
-    const origSave = window.saveToLocalStorage;
-    window.saveToLocalStorage = function () {
-        if (on && !busy) {
-            busy = true;
-            try { if (check()) renderAll(); } finally { busy = false; }
-        }
-        return origSave.apply(this, arguments);
-    };
+    // ผูกตรรกะกับ "การปล่อยเมาส์/นิ้ว" โดยตรง (capture ที่ window) ไม่ต้องพึ่งการบันทึกของแอป
+    // เลื่อนไปหลังตัวจัดการปล่อยเมาส์ของแอป (setTimeout 0) เพื่อให้หมุดถูกวางลงช่อง (snap) เสร็จก่อนค่อยเทียบตำแหน่ง
+    function onRelease() {
+        setTimeout(() => {
+            if (!on) return;
+            if (check()) { renderAll(); saveToLocalStorage(); }   // เงาเปลี่ยน → วาดใหม่ + บันทึกพร้อมกระดาน
+        }, 0);
+    }
+    ['mouseup', 'pointerup', 'touchend', 'touchcancel'].forEach(t => window.addEventListener(t, onRelease, true));
 
     window.mapddSetReveal = function (id, n) {
         const t = state.tokens.find(x => x.id === id); if (!t) return;
