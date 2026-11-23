@@ -1,0 +1,85 @@
+/* js/features/fog-reveal.js — เปิดเงาทึบรอบหมุดอัตโนมัติเมื่อเลื่อนหมุด (เปิดค้างถาวร)
+   - ปรับจำนวนช่องรอบตัวได้ที่หมุดแต่ละตัว (0 = ไม่เปิด) ค่าเริ่มต้น: ผู้เล่น 1 ช่อง, NPC/ศัตรู 0
+   - เปิดเฉพาะเงา "ทึบ" (dark) เงาบาง (shadow) ไม่ถูกแตะ
+   - มีปุ่มเปิด/ปิดฟีเจอร์ทั้งระบบในแถบเครื่องมือ */
+(function () {
+    'use strict';
+    const KEY = 'mapdd_fogreveal_v1';
+    let on = true, tokensRef = null, lastPos = {}, busy = false;
+    try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && r.on === false) on = false; } catch (e) { }
+    const saveOn = () => { try { localStorage.setItem(KEY, JSON.stringify({ on })); } catch (e) { } };
+
+    const rad = t => t.revealRadius != null
+        ? Math.max(0, Math.min(10, Math.round(Number(t.revealRadius)) || 0))
+        : ((t.faction || 'player') === 'player' ? 1 : 0);
+
+    function reveal(t) {   // ลบเงาทึบในพื้นที่ที่หมุดครอบ + R ช่องรอบตัว
+        const R = rad(t);
+        if (!R) return false;
+        const gs = state.grid.size || 64, half = (t.size || 1) * gs / 2;
+        const a = worldToGridCell(t.x - half + 1, t.y - half + 1), b = worldToGridCell(t.x + half - 1, t.y + half - 1);
+        let n = 0;
+        for (let c = a.col - R; c <= b.col + R; c++) for (let r = a.row - R; r <= b.row + R; r++) {
+            const k = c + ',' + r;
+            if (state.fog.cells[k] === 'dark') { delete state.fog.cells[k]; n++; }
+        }
+        return n > 0;
+    }
+    function check() {   // หมุดที่ตำแหน่งเปลี่ยนตั้งแต่การบันทึกครั้งก่อน = เพิ่งถูกเลื่อน
+        if (tokensRef !== state.tokens) {   // โหลดฉาก/กระดานใหม่: จำตำแหน่งใหม่ ไม่เปิดเงา
+            tokensRef = state.tokens; lastPos = {};
+            state.tokens.forEach(t => { lastPos[t.id] = t.x + ',' + t.y; });
+            return false;
+        }
+        let changed = false;
+        state.tokens.forEach(t => {
+            const k = t.x + ',' + t.y;
+            if (lastPos[t.id] === undefined) { lastPos[t.id] = k; return; }   // หมุดใหม่: ยังไม่เปิด
+            if (lastPos[t.id] !== k) { lastPos[t.id] = k; if (reveal(t)) changed = true; }
+        });
+        return changed;
+    }
+    window.mapddSyncRevealPos = t => { lastPos[t.id] = t.x + ',' + t.y; };   // ให้จุดเกิดไม่ถูกนับเป็นการเลื่อน
+
+    const origSave = window.saveToLocalStorage;
+    window.saveToLocalStorage = function () {
+        if (on && !busy) {
+            busy = true;
+            try { if (check()) renderAll(); } finally { busy = false; }
+        }
+        return origSave.apply(this, arguments);
+    };
+
+    window.mapddSetReveal = function (id, n) {
+        const t = state.tokens.find(x => x.id === id); if (!t) return;
+        t.revealRadius = Math.max(0, Math.min(10, Math.round(Number(n)) || 0));
+        saveToLocalStorage(); renderAll();
+    };
+
+    const origInspector = window.renderInspector;
+    window.renderInspector = function () {
+        origInspector.apply(this, arguments);
+        const t = getSelectedToken();
+        if (!t) return;
+        const R = rad(t);
+        document.getElementById('inspectorContent').insertAdjacentHTML('afterbegin', `
+        <div class="bg-vtt-card border border-vtt-border rounded-2xl p-2.5 space-y-1.5">
+            <div class="flex items-center justify-between"><div class="text-[11px] font-bold text-slate-400">🔦 เปิดเงารอบตัวเมื่อเลื่อนหมุด</div>${on ? '' : '<span class="text-[10px] text-rose-300">ปิดอยู่ (ปุ่มแถบเครื่องมือ)</span>'}</div>
+            <div class="flex items-center gap-2">
+                <button onclick="mapddSetReveal('${t.id}', ${R - 1})" class="w-8 h-8 rounded-lg bg-vtt-bg hover:bg-slate-800 border border-vtt-border text-white font-bold">−</button>
+                <input type="number" min="0" max="10" value="${R}" onchange="mapddSetReveal('${t.id}', this.value)" class="w-14 bg-vtt-bg border border-vtt-border rounded-lg py-1 text-center text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                <button onclick="mapddSetReveal('${t.id}', ${R + 1})" class="w-8 h-8 rounded-lg bg-vtt-bg hover:bg-slate-800 border border-vtt-border text-white font-bold">＋</button>
+                <span class="text-[11px] text-slate-300">ช่องรอบตัว ${R ? '' : '(ไม่เปิด)'}</span>
+            </div>
+            <p class="text-[10px] text-slate-500">เปิดเฉพาะเงาทึบ เปิดค้างถาวร ตัวละครผู้เล่นเริ่มต้นที่ 1 ช่อง</p>
+        </div>`);
+    };
+
+    const btn = document.createElement('button');
+    btn.title = 'เปิด/ปิดการเปิดเงารอบหมุดอัตโนมัติเมื่อเลื่อนหมุด';
+    btn.className = 'min-w-[3.2rem] px-1.5 py-1 rounded-xl hover:bg-vtt-card text-slate-200 flex flex-col items-center leading-tight text-center';
+    const paint = () => { btn.innerHTML = `<span class="text-base">🔦</span><span class="text-[9px] ${on ? 'text-emerald-400' : 'text-slate-500'}">เงาอัตโนมัติ ${on ? 'เปิด' : 'ปิด'}</span>`; };
+    btn.onclick = () => { on = !on; saveOn(); paint(); showToast(on ? 'เปิดเงาอัตโนมัติรอบหมุดเมื่อเลื่อน: เปิด' : 'เปิดเงาอัตโนมัติ: ปิด'); renderInspector(); };
+    paint();
+    const tb = document.getElementById('mapddToolbar'); if (tb) tb.appendChild(btn);
+})();

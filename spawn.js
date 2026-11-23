@@ -36,7 +36,10 @@
     const origCreate = window.createNewToken;
     window.createNewToken = function () {
         const n = state.tokens.length, r = origCreate.apply(this, arguments);
-        if (state.tokens.length > n && window.mapddPlaceAtSpawn(state.tokens[state.tokens.length - 1])) { renderAll(); saveToLocalStorage(); }
+        if (state.tokens.length > n && window.mapddPlaceAtSpawn(state.tokens[state.tokens.length - 1])) {
+            if (window.mapddSyncRevealPos) window.mapddSyncRevealPos(state.tokens[state.tokens.length - 1]);   // จุดเกิดไม่นับเป็นการเลื่อน
+            renderAll(); saveToLocalStorage();
+        }
         return r;
     };
 
