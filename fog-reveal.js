@@ -32,7 +32,7 @@
         pre = {}; preRef = state.tokens;
         state.tokens.forEach(t => { pre[t.id] = t.x + ',' + t.y; });
     }
-    function onDown(e) { if (e.target === canvas) snap(); }
+    function onDown() { snap(); }   // ทุกการกดในพื้นที่แมพ (จดตำแหน่งเฉยๆ ไม่มีผลข้างเคียง)
     container.addEventListener('mousedown', onDown, true);
     container.addEventListener('touchstart', onDown, { capture: true, passive: true });
     function check() {
