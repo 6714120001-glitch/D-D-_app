@@ -342,7 +342,7 @@
         download(`dnd_battlemap_all_${today()}.json`, {
             app: 'dnd-battlemap', version: '2.0', savedAt: new Date().toISOString(),
             grid: state.grid, fog: state.fog || { cells: {}, dmDarkOpacity: 1 },
-            aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, tokens: state.tokens,
+            aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, walls: state.walls || [], tokens: state.tokens,
             mapImageSrc: state.mapImageSrc, library: loadLib()
         });
         showToast('บันทึกฉาก + หมุด + คลังตัวละคร ลงไฟล์เดียวแล้ว (โหลดด้วยปุ่ม "โหลดฉาก")');
@@ -419,7 +419,7 @@
         await scenePut(JSON.parse(JSON.stringify({
             id: old ? old.id : 'scn-' + Date.now() + '-' + rid(), name, savedAt: Date.now(), thumb: makeThumb(),
             mapImageSrc: state.mapImageSrc, isBlankMap: state.isBlankMap, mapWidth: state.mapWidth, mapHeight: state.mapHeight,
-            grid: state.grid, fog: state.fog, aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, tokens: state.tokens
+            grid: state.grid, fog: state.fog, aoeTemplates: state.aoeTemplates || [], spawn: state.spawn || {}, walls: state.walls || [], tokens: state.tokens
         })));
         inp.value = '';
         showToast(`เก็บฉาก "${name}" แล้ว (แมพ + หมุด + เงา)`);
@@ -434,6 +434,7 @@
         state.fog = { cells: (d.fog && d.fog.cells) || {}, dmDarkOpacity: 1.0 };
         state.aoeTemplates = d.aoeTemplates || [];
         state.spawn = d.spawn || {};
+        state.walls = Array.isArray(d.walls) ? d.walls : [];
         if (!keep) {
             state.tokens = (d.tokens || []).map(ensureTokenRpgData);
             state.tokens.forEach(t => { if (t.avatar) { const im = new Image(); im.src = t.avatar; avatarCache[t.avatar] = im; } });

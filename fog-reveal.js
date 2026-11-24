@@ -18,13 +18,25 @@
         if (!R) return false;
         const gs = state.grid.size || 64, half = (t.size || 1) * gs / 2;
         const a = worldToGridCell(t.x - half + 1, t.y - half + 1), b = worldToGridCell(t.x + half - 1, t.y + half - 1);
+        const ox = state.grid.offsetX || 0, oy = state.grid.offsetY || 0;
         let n = 0;
         for (let c = a.col - R; c <= b.col + R; c++) for (let r = a.row - R; r <= b.row + R; r++) {
             const k = c + ',' + r;
-            if (state.fog.cells[k] === 'dark') { delete state.fog.cells[k]; n++; }
+            if (state.fog.cells[k] !== 'dark') continue;
+            const inFoot = c >= a.col && c <= b.col && r >= a.row && r <= b.row;   // ช่องที่หมุดยืนอยู่เปิดเสมอ
+            if (!inFoot && window.mapddCanSee && !window.mapddCanSee(t.x, t.y, ox + (c + 0.5) * gs, oy + (r + 0.5) * gs)) continue;   // กำแพง/ประตูปิดบังสายตา
+            delete state.fog.cells[k]; n++;
         }
         return n > 0;
     }
+    window.mapddRevealNow = id => {   // เปิดเงารอบหมุดตัวนี้ทันที (ไม่ต้องลาก)
+        const t = state.tokens.find(x => x.id === id); if (!t) return;
+        if (reveal(t)) { renderAll(); saveToLocalStorage(); } else showToast('ไม่มีเงาทึบให้เปิดรอบหมุดนี้ (หรือค่าช่องเป็น 0)');
+    };
+    window.mapddRevealAllNow = () => {
+        let any = false; state.tokens.forEach(t => { if (reveal(t)) any = true; });
+        if (any) { renderAll(); saveToLocalStorage(); showToast('เปิดเงารอบหมุดตามกำแพง/ประตูแล้ว'); } else showToast('ไม่มีเงาทึบให้เปิดเพิ่ม');
+    };
     // จำตำแหน่งหมุดทุกตัว (ตามรหัสหมุด) "ตอนกดเมาส์/นิ้วลงบนแมพ" ก่อนลากหมุด แล้วเทียบตอนบันทึกหลังปล่อย
     // หมายเหตุ: แอปสลับลำดับ state.tokens ใหม่ทุกครั้งที่กดหมุด (ดึงไปไว้บนสุด) จึงเทียบด้วยรหัสหมุด ไม่ใช่ตัวอาร์เรย์
     let pre = null;
@@ -80,6 +92,7 @@
                 <input type="number" min="0" max="10" value="${R}" onchange="mapddSetReveal('${t.id}', this.value)" class="w-14 bg-vtt-bg border border-vtt-border rounded-lg py-1 text-center text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-500">
                 <button onclick="mapddSetReveal('${t.id}', ${R + 1})" class="w-8 h-8 rounded-lg bg-vtt-bg hover:bg-slate-800 border border-vtt-border text-white font-bold">＋</button>
                 <span class="text-[11px] text-slate-300">ช่องรอบตัว ${R ? '' : '(ไม่เปิด)'}</span>
+                <button onclick="mapddRevealNow('${t.id}')" class="ml-auto px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-semibold" title="เปิดเงารอบหมุดนี้ตอนนี้ ตามกำแพง/ประตู">เปิดตอนนี้</button>
             </div>
             <p class="text-[10px] text-slate-500">เปิดเฉพาะเงาทึบ เปิดค้างถาวร ตัวละครผู้เล่นเริ่มต้นที่ 1 ช่อง</p>
         </div>`);
