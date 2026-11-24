@@ -108,7 +108,7 @@
     }
     const origFog = window.drawFogAndShadowsOverlay;
     window.drawFogAndShadowsOverlay = function () {   // drawBoard เรียกตอนอยู่ในพิกัดกล้องแล้ว: วาดเส้นก่อน แล้วเงาค่อยทับ
-        if (showLines && !mode && state.walls.length) { ctx.save(); drawLines(state.camera.zoom || 1); ctx.restore(); }
+        if (showLines && !mode && state.walls.length && window.mapddRole !== 'player') { ctx.save(); drawLines(state.camera.zoom || 1); ctx.restore(); }
         return origFog.apply(this, arguments);
     };
     const origDraw = window.drawBoard;

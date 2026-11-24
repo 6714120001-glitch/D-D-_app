@@ -28,7 +28,8 @@
 
     function render() {
         prune();
-        const chips = S.order.map(o => {
+        const vis = o => !window.mapddViewOf || window.mapddViewOf(tok(o.id)) !== 'none';   // หมุดที่ซ่อนอยู่ไม่ขึ้นในแถบ (กันชื่อรั่ว)
+        const chips = S.order.filter(vis).map(o => {
             const t = tok(o.id), on = o.id === S.cur;
             return `<div data-pick="${o.id}" class="shrink-0 flex items-center gap-1 rounded-xl border px-1.5 py-1 cursor-pointer ${on ? 'border-amber-400 bg-amber-500/20' : 'border-vtt-border bg-vtt-bg'}">
                 <span class="w-2.5 h-2.5 rounded-full" style="background:${t.color || '#64748b'}"></span>
@@ -55,7 +56,8 @@
         if (n < 0) { n = S.order.length - 1; S.round = Math.max(1, S.round - 1); }
         S.cur = S.order[n].id;
         state.selectedTokenId = S.cur; renderAll();
-        const t = tok(S.cur); if (t) showToast(`เทิร์นของ ${t.name} (รอบ ${S.round})`);
+        const t = tok(S.cur);
+        if (t) showToast(window.mapddViewOf && window.mapddViewOf(t) === 'none' ? `เทิร์นถัดไป (รอบ ${S.round})` : `เทิร์นของ ${t.name} (รอบ ${S.round})`);
         save(); render();
     }
     const addToken = t => {

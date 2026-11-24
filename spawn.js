@@ -47,7 +47,7 @@
     const origDraw = window.drawBoard;
     window.drawBoard = function () {
         origDraw.apply(this, arguments);
-        if (!show || (window.mapddOnline && window.mapddOnline.role === 'client')) return;
+        if (!show || window.mapddRole === 'player' || (window.mapddOnline && window.mapddOnline.role === 'client')) return;
         const g = state.grid.size || 64;
         ctx.save();
         ctx.translate(state.camera.x, state.camera.y); ctx.scale(state.camera.zoom, state.camera.zoom);
