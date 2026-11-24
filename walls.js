@@ -90,29 +90,39 @@
     container.addEventListener('mousemove', e => { if (mode && start && e.target === canvas) { const p = getCanvasPos(e), w = screenToWorld(p.x, p.y); mouse = snapPt(w.x, w.y); } }, true);
     window.addEventListener('keydown', e => { if (e.key === 'Escape' && (start || mode)) { if (start) stopDraw(); else setMode(null); } });
 
-    // ---------- วาดเส้นบนแมพ (มุมมอง DM) ----------
-    const origDraw = window.drawBoard;
-    window.drawBoard = function () {
-        origDraw.apply(this, arguments);
-        const active = !!mode;
-        if (!(showLines || active) || !state.walls.length && !start) return;
-        const z = state.camera.zoom || 1;
-        ctx.save();
-        ctx.translate(state.camera.x, state.camera.y); ctx.scale(z, z);
-        ctx.lineCap = 'round';
+    // ---------- วาดเส้นบนแมพ ----------
+    // เส้นบางประ (ไม่ทึบ) และ "วาดใต้ชั้นเงา" → ช่องที่ยังเป็นเงาทึบจะบังเส้น ผู้เล่นเดาผังห้องจากเส้นไม่ได้
+    // ตอนอยู่ในโหมดวาด/ลบ (กำลังแก้ไข) จะวาดทับเงาเพื่อให้ DM เห็นเส้นครบ
+    function drawLines(z) {
+        ctx.lineCap = 'butt';
         state.walls.forEach(w => {
             const isDoor = w.type === 'door';
             ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2);
             ctx.strokeStyle = isDoor ? (w.open ? COL.open : COL.door) : COL.wall;
-            ctx.lineWidth = (isDoor ? (w.open ? 3 : 6) : 4) / z;
-            ctx.setLineDash(isDoor && w.open ? [8 / z, 6 / z] : []);
+            ctx.globalAlpha = 0.85;
+            ctx.lineWidth = (isDoor && !w.open ? 2.2 : 1.5) / z;
+            ctx.setLineDash(isDoor ? (w.open ? [3 / z, 5 / z] : [9 / z, 4 / z]) : [7 / z, 5 / z]);
             ctx.stroke();
         });
-        ctx.setLineDash([]);
-        if (active) state.walls.forEach(w => { [[w.x1, w.y1], [w.x2, w.y2]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 4 / z, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); }); });
+        ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+    const origFog = window.drawFogAndShadowsOverlay;
+    window.drawFogAndShadowsOverlay = function () {   // drawBoard เรียกตอนอยู่ในพิกัดกล้องแล้ว: วาดเส้นก่อน แล้วเงาค่อยทับ
+        if (showLines && !mode && state.walls.length) { ctx.save(); drawLines(state.camera.zoom || 1); ctx.restore(); }
+        return origFog.apply(this, arguments);
+    };
+    const origDraw = window.drawBoard;
+    window.drawBoard = function () {
+        origDraw.apply(this, arguments);
+        if (!mode) return;   // เฉพาะโหมดแก้ไข: วาดทับเงา + จุดปลายเส้น + เส้นตัวอย่าง
+        const z = state.camera.zoom || 1;
+        ctx.save();
+        ctx.translate(state.camera.x, state.camera.y); ctx.scale(z, z);
+        drawLines(z);
+        state.walls.forEach(w => { [[w.x1, w.y1], [w.x2, w.y2]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3.5 / z, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); }); });
         if (start) {
             ctx.beginPath(); ctx.arc(start.x, start.y, 6 / z, 0, Math.PI * 2); ctx.fillStyle = '#22d3ee'; ctx.fill();
-            if (mouse) { ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(mouse.x, mouse.y); ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 3 / z; ctx.setLineDash([10 / z, 8 / z]); ctx.stroke(); }
+            if (mouse) { ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(mouse.x, mouse.y); ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2 / z; ctx.setLineDash([10 / z, 8 / z]); ctx.stroke(); }
         }
         ctx.restore();
     };
@@ -130,7 +140,7 @@
             <div class="grid grid-cols-3 gap-1">${mb('wall', 'วาดกำแพง')}${mb('door', 'วาดประตู')}${mb('erase', 'ลบเส้น')}</div>
             <div class="text-[10px] text-slate-400">${mode ? (start ? 'คลิกจุดถัดไปเพื่อต่อเส้น · คลิกจุดเดิมหรือ ESC เพื่อจบเส้น' : 'คลิกบนแมพเพื่อเริ่มเส้น (ESC ออกจากโหมด)') : 'เลือกโหมดแล้วคลิกบนแมพ · คลิกที่ประตูตอนปกติเพื่อเปิด/ปิด'} · กำแพง ${nw} · ประตู ${nd}</div>
             <div class="grid grid-cols-2 gap-1"><button data-x="stop" class="py-1 rounded-lg bg-vtt-card border border-vtt-border text-slate-200 text-[11px]">หยุดวาด/ออกโหมด</button><button data-x="undo" class="py-1 rounded-lg bg-vtt-card border border-vtt-border text-slate-200 text-[11px]">↶ ลบเส้นล่าสุด</button></div>
-            ${cb('snap', snapOn, 'เกาะมุมกริด')}${cb('show', showLines, 'แสดงเส้นกำแพง (ปิดตอนเล่นถ้าผู้เล่นดูจอเดียวกัน)')}${cb('block', blockOn, 'กำแพง/ประตูปิดบังสายตาตอนเปิดเงาอัตโนมัติ')}
+            ${cb('snap', snapOn, 'เกาะมุมกริด')}${cb('show', showLines, 'แสดงเส้นกำแพง (เส้นบางประ อยู่ใต้เงาทึบ — ช่องที่ยังมืดจะไม่เห็นเส้น)')}${cb('block', blockOn, 'กำแพง/ประตูปิดบังสายตาตอนเปิดเงาอัตโนมัติ')}
             <div class="grid grid-cols-2 gap-1"><button data-x="reveal" class="py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-semibold" title="เปิดเงารอบหมุดที่ตั้งค่าช่องไว้ ตามกำแพง/ประตูตอนนี้">🔦 เปิดเงารอบหมุดตอนนี้</button><button data-x="clear" class="py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 text-[11px]">ล้างเส้นทั้งหมด</button></div>`;
     }
     panel.addEventListener('click', e => {
