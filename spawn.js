@@ -79,7 +79,7 @@
     // ---------- แผงควบคุม ----------
     const panel = document.createElement('div');
     panel.className = 'hidden absolute left-1/2 -translate-x-1/2 z-20 bg-vtt-panel border border-amber-500/60 rounded-2xl shadow-2xl p-3 w-72 max-w-[94vw] space-y-2';
-    panel.style.top = '4.6rem';
+    panel.style.top = '0.75rem';
     container.appendChild(panel);
     function renderPanel() {
         panel.innerHTML = `<div class="flex items-center justify-between"><h3 class="text-sm font-bold text-amber-400">📍 จุดเกิดของหมุด</h3><button data-x="close" class="text-slate-400 hover:text-white px-1">✕</button></div>` +
