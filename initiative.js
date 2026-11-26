@@ -18,11 +18,11 @@
     const strip = document.createElement('div');
     strip.id = 'initStrip';
     strip.className = 'hidden absolute left-1/2 -translate-x-1/2 z-10 bg-vtt-panel/95 backdrop-blur border border-vtt-border rounded-2xl shadow-xl px-2 py-1.5 flex items-center gap-1.5 max-w-[96vw]';
-    strip.style.top = '4.6rem';
+    strip.style.top = '0.75rem';
     container.appendChild(strip);
 
     function shiftBars() {   // แถบเงา/วงสกิลเดิมอยู่บนสุด — ขยับลงให้พ้นแถบเทิร์น
-        const y = strip.classList.contains('hidden') ? '5rem' : '8.6rem';
+        const y = strip.classList.contains('hidden') ? '' : '4.5rem';
         ['fogFloatingToolbar', 'aoeFloatingToolbar'].forEach(id => { const el = document.getElementById(id); if (el) el.style.top = y; });
     }
 
@@ -94,7 +94,7 @@
     let picking = false, pick = new Set();
     const bar = document.createElement('div');
     bar.className = 'hidden absolute left-1/2 -translate-x-1/2 z-10 bg-vtt-panel/95 backdrop-blur border border-cyan-400/70 rounded-2xl shadow-xl px-2.5 py-1.5 flex items-center gap-1.5 max-w-[96vw] flex-wrap justify-center';
-    bar.style.top = '4.6rem';
+    bar.style.top = '0.75rem';
     const bb = 'shrink-0 px-2 py-1 rounded-lg bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-[11px]';
     bar.innerHTML = `<span class="text-[11px] font-bold text-cyan-300">เลือกผู้เข้าร่วม: <b id="pkN">0</b> ตัว</span>
         <span class="text-[10px] text-slate-400 hidden md:inline">คลิกหมุดบนแมพเพื่อเลือก / ยกเลิก</span>

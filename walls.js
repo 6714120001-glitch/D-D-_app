@@ -130,7 +130,7 @@
     // ---------- แผงควบคุม ----------
     const panel = document.createElement('div');
     panel.className = 'hidden absolute left-1/2 -translate-x-1/2 z-20 bg-vtt-panel border border-amber-500/60 rounded-2xl shadow-2xl p-3 w-80 max-w-[94vw] space-y-2';
-    panel.style.top = '4.6rem';
+    panel.style.top = '0.75rem';
     container.appendChild(panel);
     const mb = (m, t) => `<button data-mode="${m}" class="py-1.5 rounded-lg text-[11px] font-bold border ${mode === m ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-vtt-bg text-slate-200 border-vtt-border hover:bg-slate-800'}">${t}</button>`;
     const cb = (k, on, t) => `<label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input data-opt="${k}" type="checkbox" ${on ? 'checked' : ''} class="accent-amber-500"> ${t}</label>`;

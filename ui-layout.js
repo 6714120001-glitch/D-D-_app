@@ -185,7 +185,7 @@
 
     // เลย์เอาต์แท็บเล็ตเปลี่ยนขนาดพื้นที่แมพ → ให้แคนวาสคำนวณขนาดใหม่
     safe('resize', () => {
-        const fire = () => window.dispatchEvent(new Event('resize'));
+        const fire = () => { try { window.dispatchEvent(new Event('resize')); } catch (e) { } };
         if (typeof window.matchMedia === 'function') { const mq = window.matchMedia('(max-width: 1100px)'); if (mq.addEventListener) mq.addEventListener('change', fire); }
         setTimeout(fire, 50);
     });

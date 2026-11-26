@@ -312,7 +312,6 @@
         tb.id = 'mapddToolbar';
         tb.className = 'absolute top-2 left-1/2 -translate-x-1/2 z-10 flex flex-row gap-0.5 bg-vtt-panel/90 backdrop-blur border border-vtt-border rounded-2xl p-1 shadow-xl max-w-[96vw]';
         // แถบลอยของโหมดเงา/วงสกิลเดิมอยู่บนสุดตรงกลาง — ขยับลงมาไม่ให้ทับแถบนี้
-        ['fogFloatingToolbar', 'aoeFloatingToolbar'].forEach(id => { const el = document.getElementById(id); if (el) el.style.top = '5rem'; });
         const items = [
             ['⤢', 'พอดีจอ', 'จัดแผนที่ให้พอดีหน้าจอ', () => { fitMapToScreen(); }],
             ['▦', 'กริดพอดีภาพ', 'ปรับขนาดช่องกริดให้ลงตัวกับความกว้างภาพ', fitGridToImage],
@@ -530,6 +529,8 @@
     // ================= เริ่มทำงาน =================
     buildLibModal();
     buildSceneModal();
+    window.mapddScenes = { all: sceneAll, load: loadSceneFromLibrary, save: saveSceneToLibrary, del: sceneDel };   // ใช้โดย ui-layout.js (แผง "ฉาก")
+    window.mapddSaveAll = saveAll;
     buildAoeInputs();
     buildToolbar();
     window.addEventListener('load', () => setTimeout(fitMapToScreen, 0));

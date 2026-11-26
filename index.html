@@ -6,14 +6,14 @@
     <title>D&D Battle Map VTT — กระดานแผนที่ & หมุดตัวละคร</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="tailwind-config.js?v=1.6.0"></script>
-    <link rel="stylesheet" href="style.css?v=1.6.0">
+    <script src="tailwind-config.js?v=1.7.0"></script>
+    <link rel="stylesheet" href="style.css?v=1.7.0">
 </head>
 <body class="h-screen w-screen flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <header class="h-14 bg-vtt-panel border-b border-vtt-border px-3 flex items-center justify-between gap-2 shrink-0 z-30 shadow-lg">
-        <!-- Brand & Map Upload -->
+    <header class="h-14 bg-vtt-panel border-b border-vtt-border px-3 flex items-center gap-2 shrink-0 z-30 shadow-lg">
+        <!-- Brand -->
         <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center shadow-md shadow-amber-900/40 shrink-0">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -22,65 +22,16 @@
             </div>
             <div class="block">
                 <h1 class="hidden md:block font-fantasy font-bold text-amber-400 text-base leading-tight tracking-wide">D&D BATTLE MAP</h1>
-                <p id="appVersion" class="text-[11px] text-slate-400 leading-none">v1.6.0</p>
-            </div>
-
-            <div class="h-6 w-px bg-vtt-border mx-1 hidden sm:block"></div>
-
-            <!-- Upload Map Button -->
-            <label class="cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span>อัปโหลดแผนที่</span>
-                <input type="file" id="mapUploadInput" accept="image/*" class="hidden">
-            </label>
-
-            <!-- Clear / Remove Map Button -->
-            <button onclick="removeCurrentMap()" class="bg-rose-950/70 hover:bg-rose-900 border border-rose-800/70 text-rose-300 font-semibold text-xs px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition" title="ลบรูปแผนที่ออก (เหลือเฉพาะกระดานเปล่าและหมุด)">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span class="hidden sm:inline">ลบแมพ</span>
-            </button>
-
-            <!-- Import Character JSON Button -->
-            <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm" title="นำเข้าตัวละครจากไฟล์ .json (dnd-companion)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                <span>นำเข้าตัวละคร</span>
-                <input type="file" id="charImportInput" accept=".json" class="hidden">
-            </label>
-
-            <button onclick="loadSampleDungeonMap()" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs px-2.5 py-2 rounded-xl transition hidden lg:flex items-center gap-1.5" title="สร้างแผนที่ตัวอย่าง">
-                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-                <span>ฉากตัวอย่าง</span>
-            </button>
-
-            <!-- Built-in Preset Scene Switcher Dropdown -->
-            <div class="flex items-center bg-vtt-card border border-amber-500/50 rounded-xl px-2 py-1 gap-1.5 shadow-sm" title="เลือกสลับฉากที่สร้างไว้แล้วได้ทันที">
-                <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <select id="presetSceneSelect" onchange="handlePresetSceneSelect(this.value)" class="bg-transparent text-xs font-semibold text-amber-300 focus:outline-none cursor-pointer pr-1">
-                    <option value="" class="bg-slate-900 text-slate-300">-- เลือกฉากสำเร็จรูป --</option>
-                    <option value="town" class="bg-slate-900 text-white">🏰 1. เมืองด่านหน้า (Town + NPC)</option>
-                    <option value="guild" class="bg-slate-900 text-white">📜 2. กิลด์นักผจญภัย 1 ชั้น (Guild)</option>
-                    <option value="shop" class="bg-slate-900 text-white">⚔️ 3. ร้านอาวุธและชุดเกราะ 1 ชั้น</option>
-                    <option value="dungeon" class="bg-slate-900 text-slate-300">🏛️ 4. วิหารโบราณ (ฉากเริ่มต้น)</option>
-                </select>
-                <label class="flex items-center gap-1 text-[10px] text-slate-300 border-l border-vtt-border pl-1.5 cursor-pointer select-none hidden xl:flex" title="เก็บหมุดฝ่ายผู้เล่น (PC) ย้ายตามไปฉากใหม่ด้วย">
-                    <input type="checkbox" id="keepPlayersOnSwitchCheck" checked class="w-3 h-3 accent-amber-500">
-                    <span>พกผู้เล่นไปด้วย</span>
-                </label>
+                <p id="appVersion" class="text-[11px] text-slate-400 leading-none">v1.7.0</p>
             </div>
         </div>
-
-        <!-- Center Tools -->
-        <div class="flex items-center bg-vtt-bg p-1 rounded-xl border border-vtt-border gap-1">
+        <div class="h-6 w-px bg-vtt-border mx-1 hidden sm:block"></div>
+        <!-- ข้อมูล: ไฟล์ / ฉาก -->
+        <button id="uiFileBtn" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">ไฟล์ ▾</button>
+        <button id="uiSceneBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-semibold px-3 py-2 rounded-xl transition shadow-sm">ฉาก ▾</button>
+        <div class="flex-1 min-w-0"></div>
+        <!-- เครื่องมือบนแมพ (เปลี่ยนว่าคลิกบนแมพแล้วทำอะไร) -->
+        <div id="uiTools" class="flex items-center bg-vtt-bg p-1 rounded-xl border border-vtt-border gap-1">
             <button id="toolSelectBtn" onclick="setTool('select')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 shadow transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg>
                 <span class="hidden sm:inline">เลือก/ย้ายหมุด</span>
@@ -101,25 +52,67 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
                 <span class="hidden sm:inline">พื้นที่สกิล</span>
             </button>
+            <button id="uiToolWalls" title="กำแพงและประตู" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-violet-300 hover:text-white transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v4H4zM4 11h7v4H4zM13 11h7v4h-7zM4 17h16v2H4z"/></svg><span class="hidden sm:inline">กำแพง</span></button>
+            <button id="uiToolSpawn" title="จุดเกิดของหมุด" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-violet-300 hover:text-white transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6-5.2-6-10a6 6 0 1112 0c0 4.8-6 10-6 10zm0-8a2 2 0 100-4 2 2 0 000 4z"/></svg><span class="hidden sm:inline">จุดเกิด</span></button>
         </div>
-
-        <!-- Right: Save/Load Scene -->
+        <div class="flex-1 min-w-0"></div>
+        <!-- ควบคุมเกม -->
         <div class="flex items-center gap-1.5">
-            <button onclick="saveSceneJSON()" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition" title="บันทึกฉากและหมุดเป็นไฟล์ JSON">
-                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                <span class="hidden md:inline">บันทึกฉาก</span>
-            </button>
-            <label class="cursor-pointer bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition" title="โหลดไฟล์ฉาก JSON">
-                <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
-                <span class="hidden md:inline">โหลดฉาก</span>
-                <input type="file" id="sceneLoadInput" accept=".json" class="hidden">
-            </label>
+            <button id="uiTurnBtn" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">เทิร์น</button>
+            <button id="uiViewBtn" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">มุมมอง ▾</button>
+            <button id="uiDmBtn" class="bg-vtt-card hover:bg-slate-800 border border-violet-500/60 text-violet-200 text-xs font-semibold px-3 py-2 rounded-xl transition">ตั้งค่า DM ▾</button>
             <button id="toggleLeftBtn" onclick="toggleLeftSidebar()" class="bg-vtt-card hover:bg-slate-800 border border-vtt-border px-2.5 py-2 rounded-xl text-xs text-amber-400 font-semibold flex items-center gap-1" title="พับ/เปิดแผงควบคุมซ้าย">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 <span id="toggleLeftLabel" class="hidden sm:inline">พับแถบซ้าย</span>
             </button>
         </div>
     </header>
+
+    <!-- เมนู: ไฟล์ -->
+    <div id="uiMenuFile" class="hidden fixed z-50 w-60 bg-vtt-panel border border-vtt-border rounded-2xl shadow-2xl p-1.5">
+        <label class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>อัปโหลดแผนที่</span><input type="file" id="mapUploadInput" accept="image/*" class="hidden"></label>
+        <button onclick="removeCurrentMap()" class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>ลบแมพ</span></button>
+        <div class="h-px bg-vtt-border my-1"></div>
+        <label class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2" title="นำเข้าตัวละครจากไฟล์ (แอปคู่หู)"><span>นำเข้าตัวละคร</span><input type="file" id="charImportInput" accept=".json" class="hidden"></label>
+        <button onclick="openCharLibrary()" class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>คลังตัวละคร</span></button>
+        <div class="h-px bg-vtt-border my-1"></div>
+        <button onclick="saveSceneJSON()" class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>บันทึกฉาก (ไฟล์)</span></button>
+        <label class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>โหลดฉาก (ไฟล์)</span><input type="file" id="sceneLoadInput" accept=".json" class="hidden"></label>
+        <button onclick="mapddSaveAll()" class="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-vtt-card cursor-pointer flex items-center justify-between gap-2"><span>บันทึกรวม (ฉาก + คลังตัวละคร)</span></button>
+    </div>
+
+    <!-- แผงเลือกฉาก -->
+    <div id="uiScenePanel" class="hidden fixed z-50 w-[34rem] max-w-[96vw] bg-vtt-panel border border-amber-500/60 rounded-2xl shadow-2xl p-3 space-y-3">
+        <div class="flex items-center gap-1.5">
+            <button id="uiTabPreset" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950">สำเร็จรูป</button>
+            <button id="uiTabMine" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-vtt-card text-slate-300 border border-vtt-border">ของฉัน (คลังแมพ)</button>
+            <div class="flex-1"></div>
+            <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer select-none" title="เก็บหมุดฝ่ายผู้เล่น ย้ายตามไปฉากใหม่ด้วย"><input type="checkbox" id="keepPlayersOnSwitchCheck" checked class="w-3 h-3 accent-amber-500"><span>พกผู้เล่นไปด้วย</span></label>
+            <button id="uiSceneClose" class="text-slate-400 hover:text-white px-1.5">✕</button>
+        </div>
+        <div id="uiPresetPane" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[60vh] overflow-y-auto"></div>
+        <div id="uiMinePane" class="hidden space-y-2">
+            <div class="flex gap-1.5">
+                <input id="uiSceneName" placeholder="ชื่อฉาก เช่น ถ้ำก็อบลิน ชั้น 1" class="flex-1 bg-vtt-bg border border-vtt-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <button id="uiSceneSave" class="px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold">เก็บฉากนี้</button>
+            </div>
+            <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input id="uiKeepTokens" type="checkbox" class="accent-amber-500"> โหลดเฉพาะแมพ+เงา (คงหมุดที่อยู่บนกระดานตอนนี้)</label>
+            <div id="uiMineList" class="space-y-2 max-h-[48vh] overflow-y-auto"></div>
+            <button onclick="openSceneLibrary()" class="text-[11px] text-sky-300 hover:text-sky-200 underline">ส่งออก / นำเข้าคลังแมพ…</button>
+        </div>
+        <!-- ตัวเดิมที่โค้ดอื่นยังอ้างถึง (ซ่อน) -->
+        <div class="hidden"><select id="presetSceneSelect" onchange="handlePresetSceneSelect(this.value)" class="bg-transparent text-xs font-semibold text-amber-300 focus:outline-none cursor-pointer pr-1">
+                    <option value="" class="bg-slate-900 text-slate-300">-- เลือกฉากสำเร็จรูป --</option>
+                    <option value="town" class="bg-slate-900 text-white">🏰 1. เมืองด่านหน้า (Town + NPC)</option>
+                    <option value="guild" class="bg-slate-900 text-white">📜 2. กิลด์นักผจญภัย 1 ชั้น (Guild)</option>
+                    <option value="shop" class="bg-slate-900 text-white">⚔️ 3. ร้านอาวุธและชุดเกราะ 1 ชั้น</option>
+                    <option value="dungeon" class="bg-slate-900 text-slate-300">🏛️ 4. วิหารโบราณ (ฉากเริ่มต้น)</option>
+                </select></div>
+    </div>
+
+    <!-- เมนู: มุมมอง / ตั้งค่า DM (แถวสวิตช์ที่ปุ่มจริงอยู่ในแถบเครื่องมือเดิมที่ซ่อนไว้) -->
+    <div id="uiMenuView" class="hidden fixed z-50 w-64 bg-vtt-panel border border-vtt-border rounded-2xl shadow-2xl p-1.5"></div>
+    <div id="uiMenuDm" class="hidden fixed z-50 w-72 bg-vtt-panel border border-violet-500/50 rounded-2xl shadow-2xl p-1.5"></div>
 
     <!-- Main Workspace -->
     <div class="flex-1 flex overflow-hidden relative">
@@ -491,28 +484,29 @@
         </aside>
     </div>
 
-    <script src="state.js?v=1.6.0"></script>
-    <script src="nav.js?v=1.6.0"></script>
-    <script src="aoe.js?v=1.6.0"></script>
-    <script src="fog.js?v=1.6.0"></script>
-    <script src="render.js?v=1.6.0"></script>
-    <script src="pointer.js?v=1.6.0"></script>
-    <script src="tokens.js?v=1.6.0"></script>
-    <script src="import-companion.js?v=1.6.0"></script>
-    <script src="panels.js?v=1.6.0"></script>
-    <script src="grid-upload.js?v=1.6.0"></script>
-    <script src="presets.js?v=1.6.0"></script>
-    <script src="save-load.js?v=1.6.0"></script>
-    <script src="main.js?v=1.6.0"></script>
-    <script src="library.js?v=1.6.0"></script>
-    <script src="persist-map.js?v=1.6.0"></script>
-    <script src="stats.js?v=1.6.0"></script>
-    <script src="initiative.js?v=1.6.0"></script>
-    <script src="spawn.js?v=1.6.0"></script>
-    <script src="walls.js?v=1.6.0"></script>
-    <script src="fog-reveal.js?v=1.6.0"></script>
-    <script src="map-memory.js?v=1.6.0"></script>
-    <script src="stealth.js?v=1.6.0"></script>
-    <script src="faction.js?v=1.6.0"></script>
+    <script src="state.js?v=1.7.0"></script>
+    <script src="nav.js?v=1.7.0"></script>
+    <script src="aoe.js?v=1.7.0"></script>
+    <script src="fog.js?v=1.7.0"></script>
+    <script src="render.js?v=1.7.0"></script>
+    <script src="pointer.js?v=1.7.0"></script>
+    <script src="tokens.js?v=1.7.0"></script>
+    <script src="import-companion.js?v=1.7.0"></script>
+    <script src="panels.js?v=1.7.0"></script>
+    <script src="grid-upload.js?v=1.7.0"></script>
+    <script src="presets.js?v=1.7.0"></script>
+    <script src="save-load.js?v=1.7.0"></script>
+    <script src="main.js?v=1.7.0"></script>
+    <script src="library.js?v=1.7.0"></script>
+    <script src="persist-map.js?v=1.7.0"></script>
+    <script src="stats.js?v=1.7.0"></script>
+    <script src="initiative.js?v=1.7.0"></script>
+    <script src="spawn.js?v=1.7.0"></script>
+    <script src="walls.js?v=1.7.0"></script>
+    <script src="fog-reveal.js?v=1.7.0"></script>
+    <script src="map-memory.js?v=1.7.0"></script>
+    <script src="stealth.js?v=1.7.0"></script>
+    <script src="faction.js?v=1.7.0"></script>
+    <script src="ui-layout.js?v=1.7.0"></script>
 </body>
 </html>

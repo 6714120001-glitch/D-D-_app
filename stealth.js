@@ -104,7 +104,7 @@
         const m = t.stealth || 'off', R = t.triggerRadius ?? 3;
         const b = (k, n) => `<button onclick="mapddSetStealth('${t.id}','${k}')" class="py-1.5 rounded-lg text-[11px] font-bold border ${m === k ? 'bg-violet-500 text-white border-violet-300' : 'bg-vtt-bg text-slate-300 border-vtt-border hover:bg-slate-800'}">${n}</button>`;
         document.getElementById('inspectorContent').insertAdjacentHTML('afterbegin', `
-        <div class="bg-vtt-card border border-vtt-border rounded-2xl p-2.5 space-y-1.5">
+        <div class="bg-vtt-card border border-vtt-border rounded-2xl p-2.5 space-y-1.5" data-dm="1">
             <div class="text-[11px] font-bold text-slate-400">🎭 ซ่อนตัว / ซุ่มโจมตี</div>
             <div class="grid grid-cols-3 gap-1">${b('off', 'ปกติ')}${b('hidden', 'ซ่อน')}${b('ambush', 'ซุ่มโจมตี')}</div>
             ${m === 'ambush' ? `<div class="flex items-center gap-2"><span class="text-[11px] text-slate-300">โผล่เมื่อผู้เล่นเข้าใกล้ภายใน</span>

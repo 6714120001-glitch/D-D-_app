@@ -85,7 +85,7 @@
         if (!t) return;
         const R = rad(t);
         document.getElementById('inspectorContent').insertAdjacentHTML('afterbegin', `
-        <div class="bg-vtt-card border border-vtt-border rounded-2xl p-2.5 space-y-1.5">
+        <div class="bg-vtt-card border border-vtt-border rounded-2xl p-2.5 space-y-1.5" data-dm="1">
             <div class="flex items-center justify-between"><div class="text-[11px] font-bold text-slate-400">🔦 เปิดเงารอบตัวเมื่อเลื่อนหมุด</div>${on ? '' : '<span class="text-[10px] text-rose-300">ปิดอยู่ (ปุ่มแถบเครื่องมือ)</span>'}</div>
             <div class="flex items-center gap-2">
                 <button onclick="mapddSetReveal('${t.id}', ${R - 1})" class="w-8 h-8 rounded-lg bg-vtt-bg hover:bg-slate-800 border border-vtt-border text-white font-bold">−</button>
