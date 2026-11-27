@@ -11,6 +11,16 @@
     const bn = v => Math.floor(Math.max(0, (Number(v) || 0) - 5) / 3);
     const rid = () => Math.random().toString(36).slice(2, 7);
 
+    // ฝ่ายของตัวละครที่นำเข้า: อ่านจากฟิลด์ faction ในไฟล์ (player | npc | enemy) ไม่มี/ไม่รู้จัก = player (เหมือนเดิม)
+    const FACTION_ALIAS = {
+        player: 'player', pc: 'player', 'ผู้เล่น': 'player',
+        npc: 'npc', ally: 'npc', friendly: 'npc',
+        enemy: 'enemy', monster: 'enemy', foe: 'enemy', hostile: 'enemy', 'ศัตรู': 'enemy', 'มอนสเตอร์': 'enemy'
+    };
+    const FACTION_COLOR = { player: '#10b981', npc: '#3b82f6', enemy: '#ef4444' };
+    const normFaction = v => FACTION_ALIAS[String(v == null ? '' : v).trim().toLowerCase()] || 'player';
+    const hexOk = v => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v.trim());
+
     function companionToToken(ch, idx, center) {
         const st = ch.st || ch.stats || {};
         const g = k => Number(st[k] ?? st[k.toLowerCase()] ?? 5);
@@ -26,16 +36,20 @@
         Object.keys(CHECK_N).forEach(k => {
             checks[k] = Math.floor(g(k) / CHECK_N[k]) - (g(k) < 6 ? 1 : 0);
         });
-        const ac = ch.ac ? Number(ch.ac) : 10 + bn(g('DEX'));   // กติกาในบ้านไม่ได้กำหนด AC: ใช้ 10 + bn(DEX) แก้ได้ในแผงหมุด
+        const ac = Number(ch.ac) > 0 ? Number(ch.ac) : 10 + checks.DEX;   // ac จากไฟล์เป็นค่าหลัก ถ้าไม่มี = 10 + ค่าเช็ก DEX (แก้ได้ในแผงหมุด)
 
-        const skills = [];
-        (ch.mg || []).forEach(m => m && m.a && skills.push({ id: 'sk-' + rid(), name: m.a, mpCost: Number(m.c) || 0, desc: m.b || '' }));
-        (ch.ab || []).forEach(a => a && a.a && skills.push({ id: 'ab-' + rid(), name: a.a, mpCost: 0, desc: a.b || '' }));
-        const inventory = (ch.bag || []).filter(it => it && (it.a || it.name)).map(it => ({
-            id: 'it-' + rid(), name: it.a || it.name, qty: Number(it.q ?? it.qty ?? 1) || 1,
-            healHp: Number(it.healHp ?? 0) || 0, healMp: Number(it.healMp ?? 0) || 0
-        }));
-
+        // เก็บรายการ eq/ab/mg/bag/buff ตามไฟล์เดิมทุกฟิลด์ (d, u, ck, c ...) ไว้ใน cx เพื่อกดใช้ในแมพและส่งออกกลับได้ครบ
+        const jc = v => JSON.parse(JSON.stringify(v));
+        const lst = v => (Array.isArray(v) ? v : []).filter(x => x && typeof x === 'object').map(jc);
+        const KNOWN = ['id', 'name', 'faction', 'class', 'charClass', 'color', 'gold', 'ac', 'def', 'eq', 'ab', 'mg', 'buff', 'bag', 'cap', 'img', 'hp', 'mp', 'st', 'stats', 'lv', 'level', 'autoTraits'];
+        const extra = {};
+        Object.keys(ch).forEach(k => { if (!KNOWN.includes(k)) extra[k] = jc(ch[k]); });
+        const cx = {
+            eq: lst(ch.eq), ab: lst(ch.ab), mg: lst(ch.mg), bag: lst(ch.bag), buff: lst(ch.buff),
+            def: Number(ch.def) || 0, gold: Number(ch.gold) || 0,
+            autoTraits: ch.autoTraits == null ? null : jc(ch.autoTraits), extra
+        };
+        const faction = normFaction(ch.faction);
         const avatar = (ch.img && String(ch.img).trim()) || null;
         if (avatar) { const im = new Image(); im.src = avatar; avatarCache[avatar] = im; }
         const pos = snapPositionToGrid(center.x + idx * (state.grid.size || 64), center.y, 1);
@@ -43,16 +57,17 @@
         return ensureTokenRpgData({
             id: 'tok-' + Date.now() + '-' + rid(),
             name: (ch.name && String(ch.name).trim()) || `ตัวละคร Lv.${lv}`,
-            faction: 'player', charClass: ch.class || ch.charClass || '', level: lv,
-            baseAc: ac, ac, hp, maxHp, mp, maxMp, size: 1, color: '#10b981',
+            faction, charClass: ch.class || ch.charClass || '', level: lv,
+            baseAc: ac, ac, hp, maxHp, mp, maxMp, size: 1, color: hexOk(ch.color) ? ch.color.trim() : FACTION_COLOR[faction],
             emoji: avatar ? '' : '⚔️', avatar, x: pos.x, y: pos.y,
-            conditions: [], skills, inventory,
+            conditions: [], skills: [], inventory: [], cx,
             hr: { st: { STR: g('STR'), DEX: g('DEX'), CON: g('CON'), INT: g('INT'), WIS: g('WIS'), CHA: g('CHA') }, dmg: bn(g('STR')) + bn(g('DEX')), checks, baseHp: Number(hpA[1]) || 0, baseMp: Number(mpA[1]) || 0 },
-            src: { app: 'dnd-companion', id: ch.id ?? null, cap: ch.cap ?? null, buff: ch.buff || [] }
+            src: { app: 'dnd-companion', id: ch.id ?? null, cap: ch.cap ?? null }
         });
     }
 
     function tokenToCompanion(t) {
+        const cx = window.mapddEnsureCx ? window.mapddEnsureCx(t) : null;   // ย้ายสกิล/ไอเทมแบบเก่าเข้า cx ก่อนส่งออก
         const st = (t.hr && t.hr.st) || { STR: 5, DEX: 5, CON: 5, INT: 5, WIS: 5, CHA: 5 };
         const lv = t.level || 1;
         const mg = [], ab = [];
@@ -69,7 +84,18 @@
             bag: (t.inventory || []).map(i => ({ a: i.name, q: i.qty }))
         };
         if (t.avatar) o.img = t.avatar;
+        o.faction = t.faction || 'player';
+        if (t.charClass) o.class = t.charClass;
+        if (t.color) o.color = t.color;
         if (t.src && t.src.cap != null) o.cap = t.src.cap;
+        if (cx) {   // ฟิลด์จาก Companion v1.6: ส่งกลับครบ (ac เป็นค่าฐาน — โบนัสจากบัฟคำนวณใหม่ตอนเปิด)
+            const jc = v => JSON.parse(JSON.stringify(v));
+            o.ab = jc(cx.ab); o.mg = jc(cx.mg); o.bag = jc(cx.bag); o.buff = jc(cx.buff); o.eq = jc(cx.eq);
+            o.def = Number(cx.def) || 0; o.gold = Number(cx.gold) || 0;
+            o.ac = t.baseAc != null ? t.baseAc : t.ac;
+            if (cx.autoTraits != null) o.autoTraits = jc(cx.autoTraits);
+            Object.keys(cx.extra || {}).forEach(k => { if (!(k in o)) o[k] = jc(cx.extra[k]); });
+        }
         return o;
     }
     function exportCompanion(list, label) {
